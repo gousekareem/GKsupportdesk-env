@@ -188,10 +188,16 @@ def replay(
         raise HTTPException(400, str(e))
 
 
-if __name__ == "__main__":
+def main():
     import uvicorn
     uvicorn.run(
-        app, host="0.0.0.0",
+        app,
+        host="0.0.0.0",
         port=int(os.getenv("PORT", "7860")),
-        workers=1, timeout_keep_alive=60,
+        workers=1,
+        timeout_keep_alive=60,
     )
+
+
+if __name__ == "__main__":
+    main()
