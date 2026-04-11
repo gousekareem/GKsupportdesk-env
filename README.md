@@ -1,3 +1,17 @@
+---
+title: SupportDeskEnv
+emoji: 🎫
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+license: apache-2.0
+tags:
+  - openenv
+  - reinforcement-learning
+  - customer-support
+---
+
 # 🎫 SupportDeskEnv
 
 > **OpenEnv-compliant customer support ticket management environment | 7 tasks | 20 realistic tickets | 111 tests passing**
