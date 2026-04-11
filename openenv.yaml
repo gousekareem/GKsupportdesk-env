@@ -1,0 +1,146 @@
+name: SupportDeskEnv
+version: "3.0.0"
+description: >
+  A customer support ticket management environment where AI agents must classify,
+  prioritize, resolve, detect sentiment, summarise threads, check compliance, and
+  de-escalate angry customers. Models real enterprise support workflows used by
+  Fortune 500 companies. Includes adversarial tickets, multilingual support,
+  PCI-DSS/GDPR/HIPAA compliance scenarios, and a unique emotional journey
+  tracking mechanic for de-escalation training.
+
+author: "GouseKareem42"
+tags:
+  - customer-support
+  - nlp
+  - classification
+  - sentiment-analysis
+  - summarization
+  - compliance
+  - de-escalation
+  - enterprise
+  - real-world
+  - adversarial
+
+tasks:
+  - name: ticket-classify
+    difficulty: easy
+    max_steps: 5
+    score_range: [0.0, 1.0]
+    description: "Classify ticket category and priority. SLA decay for urgent tickets."
+    grader: weighted_label_match_with_sla_decay
+
+  - name: ticket-prioritize
+    difficulty: medium
+    max_steps: 2
+    score_range: [0.0, 1.0]
+    description: "Rank 5 simultaneous tickets by urgency using Kendall-tau scoring."
+    grader: kendall_tau_with_coverage
+
+  - name: ticket-resolve
+    difficulty: hard
+    max_steps: 2
+    score_range: [0.0, 1.0]
+    description: "Full resolution: classify, priority, response draft, escalation decision. Adversarial tickets included."
+    grader: multi_criteria_bleu_weighted
+
+  - name: ticket-sentiment-detect
+    difficulty: medium
+    max_steps: 5
+    score_range: [0.0, 1.0]
+    description: "9-class emotion detection with group-based partial credit and churn prediction."
+    grader: sentiment_with_churn_group_partial
+
+  - name: ticket-thread-summarise
+    difficulty: hard
+    max_steps: 2
+    score_range: [0.0, 1.0]
+    description: "Multi-day thread summarisation with BLEU-inspired keyword scoring and root cause fuzzy match."
+    grader: summary_bleu_plus_root_cause
+
+  - name: ticket-compliance-check
+    difficulty: medium
+    max_steps: 3
+    score_range: [0.0, 1.0]
+    description: "Detect PCI-DSS/GDPR/HIPAA violations and draft compliant responses without echoing PII."
+    grader: compliance_detection_plus_safe_response
+
+  - name: ticket-deescalate
+    difficulty: hardest
+    max_steps: 5
+    score_range: [0.0, 1.0]
+    description: "Multi-turn de-escalation with stateful emotional journey tracking. Score measures anger reduction trajectory."
+    grader: emotional_trajectory_plus_response_quality
+
+observation_space:
+  type: object
+  fields:
+    ticket_id: string
+    subject: string
+    body: string
+    customer_email: string
+    customer_name: string
+    customer_history: "array[object]"
+    customer_lifetime_value: integer
+    available_categories: "array[string]"
+    available_priorities: "array[string]"
+    available_sentiments: "array[string]"
+    available_compliance_types: "array[string]"
+    task_name: string
+    task_description: string
+    step: integer
+    max_steps: integer
+    emotional_state: "float|null — customer anger 0.0=calm 1.0=furious (deescalate task)"
+    sla_hours_remaining: "integer|null"
+    context: "object — task extras (batch_tickets, etc.)"
+    language: "string — ticket language code en|fr|de|es"
+
+action_space:
+  type: object
+  fields:
+    category: "string|null"
+    priority: "string|null"
+    response_draft: "string|null — customer-facing response"
+    escalate: "boolean|null"
+    priority_ranking: "array[string]|null"
+    detected_sentiment: "string|null"
+    churn_risk: "boolean|null"
+    summary: "string|null"
+    root_cause: "string|null"
+    resolution_status: "string|null — resolved|in_progress|unresolved"
+    compliance_violation_detected: "string|null — pci_dss|gdpr|hipaa|none"
+    compliant_response: "string|null"
+    deescalation_response: "string|null"
+    empathy_shown: "boolean|null"
+    concrete_action_offered: "boolean|null"
+    reasoning: "string|null — not scored"
+
+reward:
+  type: float
+  range: [0.0, 1.0]
+  shape: partial_credit_every_step
+  notes: >
+    classify:    0.55*cat + 0.45*pri + 0.05*sla_bonus - 0.02*sla_decay_per_wasted_step
+    prioritize:  0.55*kendall_tau + 0.35*coverage - 0.10*spurious + 0.05*top1
+    resolve:     0.20*cat + 0.20*pri + 0.40*response + 0.20*escalation - adversarial_penalty
+    sentiment:   0.65*sentiment + 0.35*churn_risk
+    summarise:   0.50*summary + 0.25*root_cause + 0.25*resolution_status
+    compliance:  0.50*violation_detection + 0.50*compliant_response
+    deescalate:  0.30*empathy + 0.30*concrete_action + 0.25*response + 0.15*anger_reduction
+
+endpoints:
+  reset:      "POST /reset?task=<name>"
+  step:       "POST /step?task=<name>&session_id=<id>"
+  state:      "GET  /state?task=<name>&session_id=<id>"
+  health:     "GET  /health"
+  tasks:      "GET  /tasks"
+  metrics:    "GET  /metrics?task=<name>"
+  replay:     "GET  /replay?task=<name>&session_id=<id>"
+  yaml:       "GET  /openenv.yaml"
+
+runtime:
+  port: 7860
+  framework: fastapi
+  python: "3.11"
+  workers: 1
+  max_memory_mb: 512
+  inference_timeout_minutes: 20
