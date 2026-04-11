@@ -1,0 +1,20 @@
+[project]
+name = "supportdesk-env"
+version = "3.0.0"
+description = "OpenEnv customer support ticket management environment"
+requires-python = ">=3.11"
+
+[tool.openenv]
+name = "SupportDeskEnv"
+version = "3.0.0"
+entrypoint = "server.app:app"
+port = 7860
+tasks = [
+    "ticket-classify",
+    "ticket-prioritize",
+    "ticket-resolve",
+    "ticket-sentiment-detect",
+    "ticket-thread-summarise",
+    "ticket-compliance-check",
+    "ticket-deescalate",
+]
